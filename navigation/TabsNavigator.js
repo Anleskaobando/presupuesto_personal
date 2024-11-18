@@ -1,6 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import HomePage from "../pages/Home";
+import HomePage from "../pages/HomePage";
+import StatisticsPage from "../pages/StatisticsPage";
 import { Ionicons } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
@@ -13,10 +14,10 @@ const TabsNavigator = () => {
         tabBarIcon: ({ color, size }) => {
           let iconName;
 
-          if (route.name === "Home") {
+          if (route.name === "Inicio") {
             iconName = "home-outline";
-          } else if (route.name === "Profile") {
-            iconName = "person-outline";
+          } else if (route.name === "Estadísticas") {
+            iconName = "analytics-outline";
           } else if (route.name === "Settings") {
             iconName = "settings-outline";
           }
@@ -32,7 +33,8 @@ const TabsNavigator = () => {
       })}
     >
       {/* Tabs principales */}
-      <Tab.Screen name="Home" component={HomePage} />
+      <Tab.Screen name="Inicio" component={HomePage} />
+      <Tab.Screen name="Estadísticas" component={StatisticsPage} />
       {/* <Tab.Screen name="Profile" component={ProfilePage} />
       <Tab.Screen name="Settings" component={SettingsPage} /> */}
     </Tab.Navigator>

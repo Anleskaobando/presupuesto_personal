@@ -8,13 +8,11 @@ const Stack = createStackNavigator();
 const StackNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="Login">
-      {/* Pantalla de Login */}
       <Stack.Screen
         name="Login"
         component={LoginPage}
         options={{ headerShown: false }}
       />
-      {/* Navegación de Tabs que incluye Home */}
       <Stack.Screen
         name="Main"
         component={TabsNavigator}
