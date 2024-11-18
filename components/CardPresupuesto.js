@@ -4,10 +4,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 
 const CardPresupuesto = ({ presupuesto, onEdit, onDelete }) => {
-  // Convertir fecha a una cadena legible
+  // Convertir fecha a una cadena legible en formato día-mes-año
   const convertirFecha = (fecha) => {
     if (!fecha) return "Fecha no disponible";
-    return new Date(fecha).toLocaleDateString();
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date(fecha));
   };
 
   // Formatear monto con comas para los miles

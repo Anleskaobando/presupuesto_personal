@@ -55,6 +55,15 @@ const PresupuestoComponent = ({
     if (field === "FechaFin") setShowEndPicker(false);
   };
 
+  const handleDateDisplay = (fecha) => {
+    if (!fecha) return "Seleccionar";
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date(fecha));
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
@@ -69,9 +78,7 @@ const PresupuestoComponent = ({
           onPress={() => setShowStartPicker(true)}
         >
           <Text style={styles.dateButtonText}>
-            {presupuesto.FechaInicio
-              ? new Date(presupuesto.FechaInicio).toLocaleDateString()
-              : "Seleccionar"}
+            {handleDateDisplay(presupuesto.FechaInicio)}
           </Text>
         </TouchableOpacity>
       </View>
@@ -94,9 +101,7 @@ const PresupuestoComponent = ({
           onPress={() => setShowEndPicker(true)}
         >
           <Text style={styles.dateButtonText}>
-            {presupuesto.FechaFin
-              ? new Date(presupuesto.FechaFin).toLocaleDateString()
-              : "Seleccionar"}
+            {handleDateDisplay(presupuesto.FechaFin)}
           </Text>
         </TouchableOpacity>
       </View>

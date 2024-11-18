@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import PresupuestoComponent from "../components/PresupuestoComponent";
@@ -24,6 +25,7 @@ const HomePage = () => {
   const [showCrearPresupuesto, setShowCrearPresupuesto] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPresupuesto, setCurrentPresupuesto] = useState(null);
+  const scaleAnim = new Animated.Value(1); // Animación para el botón
 
   // Función para cargar presupuestos desde Firestore
   const cargarPresupuestos = async () => {
@@ -33,7 +35,6 @@ const HomePage = () => {
         .map((doc) => {
           const presupuesto = doc.data();
 
-          // Validar y convertir las fechas solo si existen y son Timestamps
           const FechaInicio =
             presupuesto.FechaInicio && presupuesto.FechaInicio.toDate
               ? presupuesto.FechaInicio.toDate()
@@ -63,7 +64,7 @@ const HomePage = () => {
     cargarPresupuestos();
   }, []);
 
-  // Función para guardar un presupuesto (nuevo o editado)
+  // Función para guardar un presupuesto
   const guardarPresupuesto = async (nuevoPresupuesto) => {
     if (!nuevoPresupuesto.FechaInicio || !nuevoPresupuesto.FechaFin) {
       alert("Por favor selecciona fechas válidas.");
@@ -108,6 +109,22 @@ const HomePage = () => {
     }
   };
 
+  // Animación para el botón
+  const animateButton = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -129,22 +146,34 @@ const HomePage = () => {
         />
       ) : (
         <>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              setEditMode(false);
-              setCurrentPresupuesto({
-                FechaInicio: new Date(),
-                FechaFin: new Date(),
-                PresupuestoDestinado: "",
-                Dias: "",
-                Estado: true,
-              });
-              setShowCrearPresupuesto(true);
-            }}
+          <Animated.View
+            style={[
+              styles.animatedButtonContainer,
+              { transform: [{ scale: scaleAnim }] },
+            ]}
           >
-            <Text style={styles.addButtonText}>Añadir Presupuesto</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => {
+                animateButton();
+                setEditMode(false);
+                setCurrentPresupuesto({
+                  FechaInicio: new Date(),
+                  FechaFin: new Date(),
+                  PresupuestoDestinado: "",
+                  Dias: "",
+                  Estado: true,
+                });
+                setShowCrearPresupuesto(true);
+              }}
+            >
+              <Image
+                source={require("../assets/mas.gif")}
+                style={styles.addButtonIcon}
+                contentFit="contain"
+              />
+            </TouchableOpacity>
+          </Animated.View>
 
           <FlatList
             data={presupuestos}
@@ -189,17 +218,27 @@ const styles = StyleSheet.create({
     fontFamily: "SourGummy",
     color: "#2d3436",
   },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
+  animatedButtonContainer: {
+    alignItems: "flex-end",
     marginBottom: 20,
   },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+  addButton: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    width: 60,
+    height: 60,
+  },
+  addButtonIcon: {
+    width: 40,
+    height: 40,
   },
 });
 
