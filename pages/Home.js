@@ -7,7 +7,7 @@ const HomePage = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require("../assets/dinero.gif")}
+          source={require("../assets/limosna.gif")}
           style={styles.gif}
           contentFit="contain"
         />
