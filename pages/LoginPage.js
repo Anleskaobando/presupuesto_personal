@@ -97,11 +97,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: "bold",
+    fontFamily: "SourGummy",
     color: "#2d3436",
     marginBottom: 10,
   },
   subtitle: {
+    fontFamily: "SourGummy",
     fontSize: 16,
     color: "#636e72",
     marginBottom: 20,
@@ -124,6 +125,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    fontFamily: "SourGummy",
     fontSize: 16,
     color: "#2d3436",
   },
@@ -142,9 +144,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: {
+    fontFamily: "SourGummy",
     color: "#ffffff",
     fontSize: 16,
-    fontWeight: "bold",
   },
 });
 
