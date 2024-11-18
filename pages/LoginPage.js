@@ -7,8 +7,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  View,
 } from "react-native";
 import { Image } from "expo-image";
+import Icon from "react-native-vector-icons/Ionicons";
 import { iniciarSesionconFirebase } from "../services/auth";
 
 const LoginPage = ({ navigation }) => {
@@ -40,25 +42,39 @@ const LoginPage = ({ navigation }) => {
       <Text style={styles.title}>¡Bienvenido!</Text>
       <Text style={styles.subtitle}>Gestiona tu presupuesto personal</Text>
 
-      {/* Campos de texto */}
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        placeholderTextColor="#aaa"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor="#aaa"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.inputContainer}>
+        <Icon
+          name="mail-outline"
+          size={24}
+          color="#636e72"
+          style={styles.icon}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Correo electrónico"
+          placeholderTextColor="#aaa"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Icon
+          name="lock-closed-outline"
+          size={24}
+          color="#636e72"
+          style={styles.icon}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          placeholderTextColor="#aaa"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+      </View>
 
-      {/* Botón */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Iniciar Sesión</Text>
       </TouchableOpacity>
@@ -90,17 +106,26 @@ const styles = StyleSheet.create({
     color: "#636e72",
     marginBottom: 20,
   },
-  input: {
-    width: "100%",
-    height: 50,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#ffffff",
     borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 15,
     borderWidth: 1,
     borderColor: "#dfe6e9",
+    paddingHorizontal: 10,
+    marginBottom: 15,
     elevation: 2,
+    width: "100%",
+    height: 50,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#2d3436",
   },
   button: {
     width: "100%",
