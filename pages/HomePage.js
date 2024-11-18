@@ -17,6 +17,7 @@ import {
   updateDoc,
   Timestamp,
   doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../services/Firebase";
 
@@ -109,6 +110,16 @@ const HomePage = () => {
     }
   };
 
+  // Función para eliminar un presupuesto
+  const eliminarPresupuesto = async (id) => {
+    try {
+      await deleteDoc(doc(db, "PresupuestoInicial", id));
+      cargarPresupuestos();
+    } catch (error) {
+      console.error("Error al eliminar presupuesto:", error);
+    }
+  };
+
   // Animación para el botón
   const animateButton = () => {
     Animated.sequence([
@@ -186,6 +197,7 @@ const HomePage = () => {
                   setCurrentPresupuesto(item);
                   setShowCrearPresupuesto(true);
                 }}
+                onDelete={() => eliminarPresupuesto(item.id)}
                 onRefresh={cargarPresupuestos}
               />
             )}
