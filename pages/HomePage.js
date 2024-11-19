@@ -9,7 +9,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import PresupuestoComponent from "../components/PresupuestoComponent";
-import CardPresupuesto from "../components/CardPresupuesto";
+import CardPresupuestoComponent from "../components/CardPresupuestoComponent";
+import GastoComponent from "../components/GastoComponent";
+import ListGastoComponent from "../components/ListGastoComponent";
 import {
   collection,
   getDocs,
@@ -24,38 +26,26 @@ import { db } from "../services/Firebase";
 const HomePage = () => {
   const [presupuestos, setPresupuestos] = useState([]);
   const [showCrearPresupuesto, setShowCrearPresupuesto] = useState(false);
+  const [showGastoForm, setShowGastoForm] = useState(false);
+  const [showGastoList, setShowGastoList] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPresupuesto, setCurrentPresupuesto] = useState(null);
-  const scaleAnim = new Animated.Value(1); // Animación para el botón
+  const [selectedPresupuestoId, setSelectedPresupuestoId] = useState(null);
+  const scaleAnim = new Animated.Value(1);
 
   // Función para cargar presupuestos desde Firestore
   const cargarPresupuestos = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "PresupuestoInicial"));
-      const data = querySnapshot.docs
-        .map((doc) => {
-          const presupuesto = doc.data();
-
-          const FechaInicio =
-            presupuesto.FechaInicio && presupuesto.FechaInicio.toDate
-              ? presupuesto.FechaInicio.toDate()
-              : null;
-          const FechaFin =
-            presupuesto.FechaFin && presupuesto.FechaFin.toDate
-              ? presupuesto.FechaFin.toDate()
-              : null;
-
-          return {
-            id: doc.id,
-            ...presupuesto,
-            FechaInicio,
-            FechaFin,
-          };
-        })
-        .sort((a, b) =>
-          a.FechaInicio && b.FechaInicio ? a.FechaInicio - b.FechaInicio : 0
-        );
-      setPresupuestos(data);
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        FechaInicio: doc.data().FechaInicio?.toDate() || null,
+        FechaFin: doc.data().FechaFin?.toDate() || null,
+      }));
+      setPresupuestos(
+        data.sort((a, b) => (a.FechaInicio > b.FechaInicio ? 1 : -1))
+      );
     } catch (error) {
       console.error("Error al cargar presupuestos:", error);
     }
@@ -71,7 +61,6 @@ const HomePage = () => {
       alert("Por favor selecciona fechas válidas.");
       return;
     }
-
     if (
       !nuevoPresupuesto.PresupuestoDestinado ||
       nuevoPresupuesto.PresupuestoDestinado <= 0
@@ -79,19 +68,12 @@ const HomePage = () => {
       alert("El monto destinado debe ser mayor a 0.");
       return;
     }
-
-    if (!nuevoPresupuesto.Dias || nuevoPresupuesto.Dias <= 0) {
-      alert("Los días deben ser mayores a 0.");
-      return;
-    }
-
     try {
       const presupuestoConTimestamps = {
         ...nuevoPresupuesto,
         FechaInicio: Timestamp.fromDate(new Date(nuevoPresupuesto.FechaInicio)),
         FechaFin: Timestamp.fromDate(new Date(nuevoPresupuesto.FechaFin)),
       };
-
       if (editMode) {
         await updateDoc(
           doc(db, "PresupuestoInicial", currentPresupuesto.id),
@@ -118,6 +100,45 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error al eliminar presupuesto:", error);
     }
+  };
+
+  // Funciones para alternar entre vistas
+  const abrirGastoForm = (presupuestoId) => {
+    setSelectedPresupuestoId(presupuestoId);
+    setShowGastoForm(true);
+    setShowCrearPresupuesto(false);
+    setShowGastoList(false);
+  };
+
+  const cerrarGastoForm = () => {
+    setSelectedPresupuestoId(null);
+    setShowGastoForm(false);
+  };
+
+  const abrirListaGastos = (presupuestoId) => {
+    setSelectedPresupuestoId(presupuestoId);
+    setShowGastoList(true);
+    setShowCrearPresupuesto(false);
+    setShowGastoForm(false);
+  };
+
+  const cerrarListaGastos = () => {
+    setSelectedPresupuestoId(null);
+    setShowGastoList(false);
+  };
+
+  const abrirCrearPresupuesto = () => {
+    setEditMode(false);
+    setCurrentPresupuesto({
+      FechaInicio: new Date(),
+      FechaFin: new Date(),
+      PresupuestoDestinado: "",
+      Dias: "",
+      Estado: true,
+    });
+    setShowCrearPresupuesto(true);
+    setShowGastoList(false);
+    setShowGastoForm(false);
   };
 
   // Animación para el botón
@@ -147,7 +168,15 @@ const HomePage = () => {
         <Text style={styles.title}>Presupuesto Personal</Text>
       </View>
 
-      {showCrearPresupuesto ? (
+      {showGastoForm && (
+        <GastoComponent
+          presupuestoId={selectedPresupuestoId}
+          onClose={cerrarGastoForm}
+          onSave={cargarPresupuestos}
+        />
+      )}
+
+      {showCrearPresupuesto && (
         <PresupuestoComponent
           presupuesto={currentPresupuesto}
           setPresupuesto={setCurrentPresupuesto}
@@ -155,7 +184,17 @@ const HomePage = () => {
           onClose={() => setShowCrearPresupuesto(false)}
           isEditing={editMode}
         />
-      ) : (
+      )}
+
+      {showGastoList && (
+        <ListGastoComponent
+          presupuestoId={selectedPresupuestoId}
+          onClose={cerrarListaGastos}
+          onUpdate={cargarPresupuestos}
+        />
+      )}
+
+      {!showCrearPresupuesto && !showGastoForm && !showGastoList && (
         <>
           <Animated.View
             style={[
@@ -167,15 +206,7 @@ const HomePage = () => {
               style={styles.addButton}
               onPress={() => {
                 animateButton();
-                setEditMode(false);
-                setCurrentPresupuesto({
-                  FechaInicio: new Date(),
-                  FechaFin: new Date(),
-                  PresupuestoDestinado: "",
-                  Dias: "",
-                  Estado: true,
-                });
-                setShowCrearPresupuesto(true);
+                abrirCrearPresupuesto();
               }}
             >
               <Image
@@ -190,7 +221,7 @@ const HomePage = () => {
             data={presupuestos}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <CardPresupuesto
+              <CardPresupuestoComponent
                 presupuesto={item}
                 onEdit={() => {
                   setEditMode(true);
@@ -198,7 +229,8 @@ const HomePage = () => {
                   setShowCrearPresupuesto(true);
                 }}
                 onDelete={() => eliminarPresupuesto(item.id)}
-                onRefresh={cargarPresupuestos}
+                onAddGasto={() => abrirGastoForm(item.id)}
+                onShowGastos={() => abrirListaGastos(item.id)}
               />
             )}
           />
