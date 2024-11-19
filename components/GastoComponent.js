@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,11 +20,11 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/Firebase";
 
-const GastoComponent = ({ presupuestoId, onClose, onSave }) => {
-  const [categoria, setCategoria] = useState("Comida");
-  const [descripcion, setDescripcion] = useState("");
-  const [monto, setMonto] = useState("");
-  const [fecha, setFecha] = useState(new Date());
+const GastoComponent = ({ presupuestoId, onClose, onSave, gasto = null }) => {
+  const [categoria, setCategoria] = useState(gasto?.Categoria || "Comida");
+  const [descripcion, setDescripcion] = useState(gasto?.Descripcion || "");
+  const [monto, setMonto] = useState(gasto?.Monto?.toString() || "");
+  const [fecha, setFecha] = useState(gasto?.Fecha?.toDate() || new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -41,23 +41,45 @@ const GastoComponent = ({ presupuestoId, onClose, onSave }) => {
       return;
     }
 
-    const nuevoGasto = {
-      Categoria: categoria,
-      Descripcion: descripcion,
-      Monto: parseFloat(monto),
-      Fecha: Timestamp.fromDate(fecha),
-      PresupuestoId: presupuestoId,
-    };
+    const montoActual = parseFloat(monto);
+    const montoAnterior = gasto?.Monto || 0;
 
     try {
-      await addDoc(collection(db, "Gastos"), nuevoGasto);
+      if (gasto) {
+        // Actualizar gasto existente
+        const gastoRef = doc(db, "Gastos", gasto.id);
+        await updateDoc(gastoRef, {
+          Categoria: categoria,
+          Descripcion: descripcion,
+          Monto: montoActual,
+          Fecha: Timestamp.fromDate(fecha),
+        });
 
-      // Actualizar el presupuesto con el nuevo gasto
-      const presupuestoRef = doc(db, "PresupuestoInicial", presupuestoId);
-      await updateDoc(presupuestoRef, {
-        PresupuestoDestinado: increment(-parseFloat(monto)),
-      });
-      alert("Gasto añadido con éxito y presupuesto actualizado.");
+        // Ajustar presupuesto según la diferencia en el monto
+        const presupuestoRef = doc(db, "PresupuestoInicial", presupuestoId);
+        await updateDoc(presupuestoRef, {
+          PresupuestoDestinado: increment(montoAnterior - montoActual),
+        });
+        alert("Gasto actualizado y presupuesto ajustado.");
+      } else {
+        // Crear nuevo gasto
+        const nuevoGasto = {
+          Categoria: categoria,
+          Descripcion: descripcion,
+          Monto: montoActual,
+          Fecha: Timestamp.fromDate(fecha),
+          PresupuestoId: presupuestoId,
+        };
+        await addDoc(collection(db, "Gastos"), nuevoGasto);
+
+        // Reducir presupuesto por el monto del nuevo gasto
+        const presupuestoRef = doc(db, "PresupuestoInicial", presupuestoId);
+        await updateDoc(presupuestoRef, {
+          PresupuestoDestinado: increment(-montoActual),
+        });
+        alert("Gasto añadido con éxito.");
+      }
+
       onSave();
       onClose();
     } catch (error) {
@@ -69,7 +91,9 @@ const GastoComponent = ({ presupuestoId, onClose, onSave }) => {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Añadir Gasto</Text>
+        <Text style={styles.title}>
+          {gasto ? "Editar Gasto" : "Añadir Gasto"}
+        </Text>
         <Ionicons name="wallet-outline" size={24} color="#4CAF50" />
       </View>
 
