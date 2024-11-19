@@ -1,79 +1,99 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../services/Firebase";
-import GraficoScreen from "./BarChart";
 import { collection, query, getDocs } from "firebase/firestore";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Image } from "expo-image";
+import GraficoScreen from "./BarChart";
 
 const StatisticsPage = () => {
-  const [montosPorMes, setMontosPorMes] = useState(null);
+  const [montosPorMes, setMontosPorMes] = useState({
+    labels: [],
+    datasets: [{ data: [] }],
+  });
 
+  // Función para obtener y procesar los datos
   useEffect(() => {
-    const obtenerPresupuesto = async () => {
+    const fetchData = async () => {
       try {
         const q = query(collection(db, "PresupuestoInicial"));
         const querySnapshot = await getDocs(q);
 
-        const montosPorMes = {};
+        const meses = [];
+        const montos = [];
 
         querySnapshot.forEach((doc) => {
-          const { Fecha, Monto } = doc.data();
+          const { FechaInicio, PresupuestoDestinado } = doc.data();
 
-          if (Fecha && Monto) {
-            const fechaObjeto = new Date(Fecha.seconds * 1000);
+          // Verifica que los datos necesarios existan
+          if (FechaInicio && PresupuestoDestinado) {
+            // Convierte el timestamp largo en un objeto Date
+            const fechaObjeto = new Date(FechaInicio.seconds * 1000);
+
+            // Formatea la fecha al estilo "mes-año"
             const mesAnio = `${
               fechaObjeto.getMonth() + 1
             }-${fechaObjeto.getFullYear()}`;
 
-            if (!montosPorMes[mesAnio]) {
-              montosPorMes[mesAnio] = 0;
+            // Agrupa montos por mes
+            const index = meses.indexOf(mesAnio);
+            if (index !== -1) {
+              // Suma al monto existente
+              montos[index] += PresupuestoDestinado;
+            } else {
+              // Agrega un nuevo mes con su monto
+              meses.push(mesAnio);
+              montos.push(PresupuestoDestinado);
             }
-            montosPorMes[mesAnio] += Monto;
+          } else {
+            console.warn("Documento con datos incompletos:", doc.data());
           }
         });
 
-        const labels = Object.keys(montosPorMes);
-        const dataCounts = Object.values(montosPorMes);
-
+        // Actualiza el estado con el formato requerido por el gráfico
         setMontosPorMes({
-          labels,
-          datasets: [
-            {
-              label: "Montos por Mes",
-              data: dataCounts,
-            },
-          ],
+          labels: meses,
+          datasets: [{ data: montos }],
         });
+
+        console.log({ labels: meses, datasets: [{ data: montos }] });
       } catch (error) {
-        console.error(
-          "Error al obtener los datos de PresupuestoInicial:",
-          error
-        );
+        console.error("Error al obtener documentos:", error);
       }
     };
 
-    obtenerPresupuesto();
+    fetchData();
   }, []);
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require("../assets/analitica.gif")}
-          style={styles.gif}
-          contentFit="contain"
-        />
-        <Text style={styles.title}>Estadísticas</Text>
-      </View>
-      <GraficoScreen montosPorMes={setMontosPorMes} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <Header />
+        <GraficoScreen montosPorMes={montosPorMes} />
+      </ScrollView>
     </View>
   );
 };
+
+// Componente Header
+const Header = () => (
+  <View style={styles.header}>
+    <Image
+      source={require("../assets/analitica.gif")}
+      style={styles.gif}
+      contentFit="contain"
+    />
+    <Text style={styles.title}>Estadísticas</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffff",
     padding: 20,
+  },
+  contentContainer: {
+    paddingBottom: 20,
   },
   header: {
     flexDirection: "row",
