@@ -3,7 +3,7 @@ import { db } from "../services/Firebase";
 import { collection, query, getDocs } from "firebase/firestore";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Image } from "expo-image";
-import GraficoScreen from "./BarChart";
+import GraficoScreen from "./Reportpdf";
 
 const StatisticsPage = () => {
   const [montosPorMes, setMontosPorMes] = useState({
